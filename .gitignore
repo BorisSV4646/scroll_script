@@ -17,6 +17,7 @@ wallets/
 .eggs/
 lib/
 lib64/
+log/
 parts/
 sdist/
 var/
