@@ -8,6 +8,12 @@ import copy
 import os
 from dotenv import load_dotenv
 from hexbytes import HexBytes
+import pandas as pd
+# from Function import *
+
+
+wallet_key = pd.read_excel(
+    './wallets/wallets.xlsx', sheet_name='wallet', header=None)
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
@@ -57,22 +63,59 @@ def create_transaction(chainId, account_from, value, data, contract, network):
     return dict_transaction
 
 
-def sign_transaction(dict_transaction, network):
+def createCallContract(chainId, account_from, value, network):
+    global count_nonce
     web3 = Web3(network)
+    while count_nonce == web3.eth.getTransactionCount(account_from):
+        time.sleep(5)
+    dict_transaction = {
+        'chainId': chainId,
+        'from': account_from,
+        'gasPrice': web3.eth.gas_price,
+        'nonce': web3.eth.getTransactionCount(account_from),
+        'value': int(Web3.toWei(value, 'ether')),
+        'gas': 2_000_000 * 2,
+    }
+    count_nonce = dict_transaction['nonce']
+    return dict_transaction
+
+
+def sign_transaction(dict_transaction, network, private_key):
+    web3 = Web3(network)
+    if network == scroll_alpha:
+        web3.middleware_onion.inject(geth_poa_middleware, layer=0)
     signed_txn = web3.eth.account.sign_transaction(
-        dict_transaction, os.environ.get('private_key_main'))  # тут надо будет ввести перемнную для закрытого ключа
+        dict_transaction, private_key)  # тут надо будет ввести перемнную для закрытого ключа
     txn_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
     while True:
         try:
             txn = web3.eth.get_transaction_receipt(txn_hash.hex())
             if txn['status'] == 1:
                 logger.success(
-                    f"Wallet {dict_transaction['to']} succes recieve {dict_transaction['value']} ETH - {txn_hash.hex()}")
+                    f"Transaction {dict_transaction['from']} to {dict_transaction['to']} send - {txn_hash.hex()}")
             else:
-                logger.error(f"{txn_hash.hex()} not send")
+                logger.error(
+                    f"Transaction {dict_transaction['from']} to {dict_transaction['to']} not send - {txn_hash.hex()}")
             break
         except TransactionNotFound:
             pass
+
+
+# https://ethereum.stackexchange.com/questions/61624/how-to-convert-a-uint-to-64-byte-hex-string-using-node-js
+# https://goerli.etherscan.io/tx/0x831f90739b4d99c2989aaa35513c6c4d903c290401a85d318e1230f1a14d5dbd
+def createHEX(value, gasPrice):
+    valueWei = int(Web3.toWei(value, 'ether'))
+    amount = valueWei + gasPrice
+    hex = Web3.toHex(amount)
+    for line in hex:
+        line = hex[2:]
+    if (len(line) < 60):
+        c = "0"
+        n = 60 - len(line)
+        new_str = c * n
+        value = new_str + line
+    print(value)
+    return value
 
 
 def send_txn():
@@ -83,45 +126,47 @@ def send_txn():
         chainId = 5
         value = 0.01
         data = ""
-        if (check_balance(wallets[i], network) >= 0.04):
-            logger.info(f"{wallets[i]} have more than 0.04 eth")
+        if (check_balance(wallet_key.at[i, 0], network) >= 0.01):
+            logger.info(
+                f"{wallet_key.at[i, 0]} have more than 0.01 eth")
             continue
         else:
-            contract = wallets[i]
+            contract = wallet_key.at[i, 0]
+            private_key = os.environ.get('private_key_main')
             sign_transaction(create_transaction(
-                chainId, account_from, value, data, contract, network), network)
+                chainId, account_from, value, data, contract, network), network, private_key)
+
 
 # *Сделать цикл для разных кошелей. Разобраться как брат только мультипликатор функции
 # *и подставлять к нему закодированные данные
 
+def valueAndGase(value, gasprice):
+    valueWei = int(Web3.toWei(value, 'ether'))
+    print(valueWei + gasprice)
+    return valueWei + gasprice
 
-# def depositETH():
-#     contract = "0xe5E30E7c24e4dFcb281A682562E53154C15D3332"
-#     amount = 10000040
-#     gas = 2_000_000
-#     dict_transaction = {
-#         'chainId': 5,
-#         'from': account_from,
-#         'to': contract,
-#         'gasPrice': web3.eth.gas_price,
-#         'nonce': web3.eth.getTransactionCount(account_from),
-#         'value': int(Web3.toWei(amount, 'gwei')),
-#         'data': "0x9f8420b3000000000000000000000000000000000000000000000000002386f26fc100000000000000000000000000000000000000000000000000000000000000009c40",
-#         'gas': gas,
-#     }
-#     signed_txn = web3.eth.account.sign_transaction(
-#         dict_transaction, private_key)
-#     txn_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
-#     logger.success(txn_hash.hex())
+
+def depositETH():
+    wallets = get_wallet_edge()
+    for i in range(len(wallets)):
+        network = goerly
+        web3 = Web3(network)
+        account_from = wallet_key.at[i, 0]
+        chainId = 5
+        value = valueAndGase(0.01, web3.eth.gas_price)
+        # "0x9f8420b3000000000000000000000000000000000000000000000000002386f26fc100000000000000000000000000000000000000000000000000000000000000009c40"
+        data = f"0x9f8420b3{createHEX(value, web3.eth.gas_price)}00000000000000000000000000000000000000000000000000000000000000009c40"
+        print(data)
+        contract = "0xe5E30E7c24e4dFcb281A682562E53154C15D3332"
+        private_key = wallet_key.at[i, 1]
+        sign_transaction(create_transaction(
+            chainId, account_from, value, data, contract, network), network, private_key)
 
 
 # смотреть: https://uniswap-python.com/getting-started.html
 # https://stackoverflow.com/questions/64526925/how-to-swap-tokens-on-uniswap-using-web3-js
 # https://www.youtube.com/watch?v=oYMCQg4Oqlc
-def wrapETH():
-    web3 = Web3(scroll_alpha)
-    logger.info(f"Is connected to SCroll Alpha: {web3.isConnected()}")
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
     # uniswap = Uniswap(address=account_from, private_key=private_key,
     #                   version=version, provider="https://alpha-rpc.scroll.io/l2")
     # eth = "0x0000000000000000000000000000000000000000"
@@ -130,49 +175,39 @@ def wrapETH():
     # print(uniswap.get_token(eth))
     # uniswap.make_trade(eth, usdc, 4627292594762859)
 
-    contract = "0x5300000000000000000000000000000000000004"
-    amount = 10000000
-    gas = 2_000_000
-    dict_transaction = {
-        'chainId': 534353,
-        'from': account_from,
-        'to': contract,
-        'gasPrice': web3.eth.gas_price,
-        'nonce': web3.eth.getTransactionCount(account_from),
-        'value': int(Web3.toWei(amount, 'gwei')),
-        'data': "0xd0e30db0",
-        'gas': gas * 2,
-    }
-    signed_txn = web3.eth.account.sign_transaction(
-        dict_transaction, private_key)
-    txn_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    logger.success(txn_hash.hex())
+def wrapETH():
+    wallets = get_wallet_edge()
+    for i in range(len(wallets)):
+        network = scroll_alpha
+        account_from = wallet_key.at[i, 0]
+        chainId = 534353
+        value = 0.01
+        contract = "0x5300000000000000000000000000000000000004"
+        private_key = wallet_key.at[i, 1]
+        while (check_balance(wallet_key.at[i, 0], network) < 0.01):
+            time.sleep(3)
+        setContractAdress(contract)
+        transaction = contract.functions.deposit().buildTransaction(createCallContract(
+            chainId, account_from, value, network))
+        sign_transaction(transaction, network, private_key)
 
 
 def unwrapETH():
-    web3 = Web3(scroll_alpha)
-    logger.info(f"Is connected to SCroll Alpha: {web3.isConnected()}")
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    wallets = get_wallet_edge()
+    for i in range(len(wallets)):
+        network = scroll_alpha
+        account_from = wallet_key.at[i, 0]
+        chainId = 534353
+        value = 0
+        contract = "0x5300000000000000000000000000000000000004"
+        private_key = wallet_key.at[i, 1]
+        while (check_balance(wallet_key.at[i, 0], network) < 0.01):
+            time.sleep(3)
+        setContractAdress(contract)
+        transaction = contract.functions.withdraw(10000000000000000).buildTransaction(createCallContract(
+            chainId, account_from, value, network))
+        sign_transaction(transaction, network, private_key)
 
-    contract = "0x5300000000000000000000000000000000000004"
-    amount = 0
-    gas = 2_000_000
-    dict_transaction = {
-        'chainId': 534353,
-        'from': account_from,
-        'to': contract,
-        'gasPrice': web3.eth.gas_price,
-        'nonce': web3.eth.getTransactionCount(account_from),
-        'value': int(Web3.toWei(amount, 'gwei')),
-        'data': "0x2e1a7d4d000000000000000000000000000000000000000000000000002386f26fc10000",
-        'gas': gas * 2,
-    }
-    signed_txn = web3.eth.account.sign_transaction(
-        dict_transaction, private_key)
-    txn_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    logger.success(txn_hash.hex())
-
-# !Проблема с nonce - не дает сделать больше одной транзакции, так как нонс затревает
 # !Проблема с Юнисвапом, надо понять как подставлять значения свои, так как цены меняются постоянно
 
 
@@ -256,11 +291,12 @@ def create_pool():
     sign_transaction(create_transaction(value, data, contract))
 
 
+# if __name__ == '__main__':
+#     send_txn()
+#     depositETH()
+#     wrapETH()
+#     unwrapETH()
 send_txn()
-# depositETH()
+depositETH()
 # wrapETH()
 # unwrapETH()
-# create_pool()
-
-# if __name__ == '__main__':
-#     pass
