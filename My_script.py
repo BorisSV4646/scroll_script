@@ -145,6 +145,9 @@ def valueAndGase(value, gasprice):
     print(valueWei + gasprice)
     return valueWei + gasprice
 
+# разобраться как работает код который я скопировал
+# или также подставлять или научиться работать с прокси контрактом
+
 
 def depositETH():
     wallets = get_wallet_edge()
