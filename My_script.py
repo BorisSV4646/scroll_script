@@ -137,16 +137,13 @@ def send_txn():
                 chainId, account_from, value, data, contract, network), network, private_key)
 
 
-# *Сделать цикл для разных кошелей. Разобраться как брат только мультипликатор функции
-# *и подставлять к нему закодированные данные
-
 def valueAndGase(value, gasprice):
     valueWei = int(Web3.toWei(value, 'ether'))
     print(valueWei + gasprice)
     return valueWei + gasprice
 
-# разобраться как работает код который я скопировал
-# или также подставлять или научиться работать с прокси контрактом
+
+Ы
 
 
 def depositETH():
