@@ -20,6 +20,7 @@ lib/
 lib64/
 log/
 parts/
+node_modules/
 sdist/
 var/
 wheels/

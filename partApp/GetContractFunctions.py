@@ -10,7 +10,7 @@ goerly = Web3.HTTPProvider(
     'https://endpoints.omniatech.io/v1/eth/goerli/public')
 scroll_alpha = Web3.HTTPProvider('https://alpha-rpc.scroll.io/l2')
 web3 = Web3(scroll_alpha)
-address = "0x5300000000000000000000000000000000000004"
+address = "0xD9880690bd717189cC3Fbe7B9020F27fae7Ac76F"
 
 
 def setContractAdress(newadress):
@@ -63,7 +63,7 @@ for h, sign in signatures.items():
     if len(sign) > 2:
         print(f"Multiple matches found for {h}:", ", ".join(sign))
     functions.append(sign[0])
-    name, sign = sign[0].split("(")
+    name, sign, *z = sign[0].split("(")
     args = sign[:-1].split(",")
     if args == ['']:  # ''.split() returns ['']
         args = []
