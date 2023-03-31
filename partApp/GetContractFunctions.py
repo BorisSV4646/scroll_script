@@ -9,8 +9,10 @@ import requests
 goerly = Web3.HTTPProvider(
     'https://endpoints.omniatech.io/v1/eth/goerli/public')
 scroll_alpha = Web3.HTTPProvider('https://alpha-rpc.scroll.io/l2')
-web3 = Web3(scroll_alpha)
-address = "0xD9880690bd717189cC3Fbe7B9020F27fae7Ac76F"
+eth = Web3.HTTPProvider(
+    'https://mainnet.infura.io/v3/f8bf00d32b6448a3818f59c6f16e7f86')
+web3 = Web3(eth)
+address = "0x022e6cb6F61ab61aEc23ae278CFF2f2AE320A37d"
 
 
 def setContractAdress(newadress):

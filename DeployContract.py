@@ -106,7 +106,7 @@ def load_bytecode() -> str:
     return Path("./deployContract/contract_byte_code.txt").open().readline()
 
 
-def main() -> None:
+def mainDeploy() -> None:
     logger.info("Start.")
 
     wallets = load_wallets()
@@ -140,6 +140,3 @@ def main() -> None:
         logger.success(f"{i+1}/{len(wallets)}")
 
     logger.success("Finish.")
-
-
-main()

@@ -1,0 +1,7 @@
+https://habr.com/ru/post/674204/ fot web3 on python
+https://louisabraham.github.io/articles/no-abi.html - статья как отсылать без ABi на контракт
+https://eth-converter.com/ - конвентер эфиры в гвеи и т.д.
+компиляция контракта прямо web3 https://web3py.readthedocs.io/en/stable/web3.contract.html
+как пеервести hex в число: x = int("9c40", 16)
+https://github.com/SomeWeb3/arbitrum_contract_deployer/tree/main/app - пример который брал для деплоя контрактов
+https://github.com/Uniswap/examples/blob/main/v3-sdk/swap-and-add-liquidity/src/libs/liquidity.ts#L36 - скрипт самих юнисвап для свапов
