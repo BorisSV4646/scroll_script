@@ -99,7 +99,7 @@ def createCallContract(chainId, account_from, value, network):
         'gasPrice': web3.eth.gas_price,
         'nonce': web3.eth.getTransactionCount(account_from),
         'value': int(Web3.toWei(value, 'ether')),
-        'gas': 2_000_000,
+        'gas': 2000000,
     }
     return dict_transaction
 
@@ -154,7 +154,7 @@ def depositETH():
         account_from = wallet_key.at[i, 0]
         chainId = 5
         gasPrice = web3.eth.gas_price
-        value = 0.012
+        value = 0.022
         contract_abi = [
             {
                 "inputs": [
@@ -178,51 +178,58 @@ def depositETH():
         contract = "0xe5E30E7c24e4dFcb281A682562E53154C15D3332"
         deposit_contract = web3.eth.contract(contract, abi=contract_abi)
         private_key = wallet_key.at[i, 1]
-        transaction = deposit_contract.functions.depositETH(10000000000000000, 40000).buildTransaction(createCallContract(
+        transaction = deposit_contract.functions.depositETH(20000000000000000, 40000).buildTransaction(createCallContract(
             chainId, account_from, value, network))
         sign_transaction(transaction, network, private_key)
 
 
 def wrapETHandUnwrap():
     wallets = get_wallet_edge()
-    contract = "0xa1EA0B2354F5A344110af2b6AD68e75545009a03"
-    ContractFunction.gethaches(contract)
-    newcontract = ContractFunction.getContract()
     for i in range(len(wallets)):
+        contract = "0xa1EA0B2354F5A344110af2b6AD68e75545009a03"
+        contract_abi = [
+            {
+                "name": "withdraw",
+                "type": "function",
+                "inputs": [
+                    {
+                        "name": "wad",
+                        "type": "uint256"
+                    }
+                ],
+                "outputs": []
+            },
+            {
+                "name": "deposit",
+                "type": "function",
+                "inputs": [
+                    {
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "outputs": []
+            }
+        ]
         network = scroll_alpha
+        web3 = Web3(network)
+        wrap_contract = web3.eth.contract(contract, abi=contract_abi)
         account_from = wallet_key.at[i, 0]
         chainId = 534353
-        value = 0.04
+        value = 0.01
         private_key = wallet_key.at[i, 1]
         while (check_balance(wallet_key.at[i, 0], network) < 0.05):
             time.sleep(3)
-        transactionWrap = newcontract.functions.deposit().buildTransaction(createCallContract(
+        transactionWrap = wrap_contract.functions.deposit().buildTransaction(createCallContract(
             chainId, account_from, value, network))
         sign_transaction(transactionWrap, network, private_key)
 
         time.sleep(5)
 
-        transactionUnwrap = newcontract.functions.withdraw(40000000000000000).buildTransaction(createCallContract(
-            chainId, account_from, value, network))
+        new_value = 0
+        transactionUnwrap = wrap_contract.functions.withdraw(10000000000000000).buildTransaction(createCallContract(
+            chainId, account_from, new_value, network))
         sign_transaction(transactionUnwrap, network, private_key)
-
-
-# def unwrapETH():
-#     wallets = get_wallet_edge()
-#     contract = "0xa1EA0B2354F5A344110af2b6AD68e75545009a03"
-#     ContractFunction.gethaches(contract)
-#     newcontract = ContractFunction.getContract()
-#     for i in range(len(wallets)):
-#         network = scroll_alpha
-#         account_from = wallet_key.at[i, 0]
-#         chainId = 534353
-#         value = 0
-#         private_key = wallet_key.at[i, 1]
-#         while (check_balance(wallet_key.at[i, 0], network) < 0.05):
-#             time.sleep(3)
-#         transaction = newcontract.functions.withdraw(40000000000000000).buildTransaction(createCallContract(
-#             chainId, account_from, value, network))
-#         sign_transaction(transaction, network, private_key)
 
 
 def BufficornBatle():
@@ -250,7 +257,7 @@ def withdrawDeposit():
         web3 = Web3(network)
         account_from = wallet_key.at[i, 0]
         chainId = 534353
-        value = 0.04
+        value = 0.07
         contract_abi = [
             {
                 "inputs": [
@@ -274,9 +281,60 @@ def withdrawDeposit():
         contract = "0x6d79Aa2e4Fbf80CF8543Ad97e294861853fb0649"
         deposit_contract = web3.eth.contract(contract, abi=contract_abi)
         private_key = wallet_key.at[i, 1]
-        transaction = deposit_contract.functions.withdrawETH(20000000000000000, 160000).buildTransaction(createCallContract(
+        transaction = deposit_contract.functions.withdrawETH(60000000000000000, 160000).buildTransaction(createCallContract(
             chainId, account_from, value, network))
         sign_transaction(transaction, network, private_key)
+
+
+# def withdrawDeposit():
+#     wallets = get_wallet_edge()
+#     for i in range(len(wallets)):
+#         network = scroll_alpha
+#         web3 = Web3(network)
+#         account_from = wallet_key.at[i, 0]
+#         chainId = 534353
+#         contract_abi = [
+#             {
+#                 "inputs": [
+#                     {
+#                         "internalType": "uint256",
+#                         "name": "_amount",
+#                         "type": "uint256"
+#                     },
+#                     {
+#                         "internalType": "uint256",
+#                         "name": "_gasLimit",
+#                         "type": "uint256"
+#                     }
+#                 ],
+#                 "name": "withdrawETH",
+#                 "outputs": [],
+#                 "stateMutability": "nonpayable",
+#                 "type": "function"
+#             }
+#         ]
+#         contract = "0x6d79Aa2e4Fbf80CF8543Ad97e294861853fb0649"
+#         deposit_contract = web3.eth.contract(contract, abi=contract_abi)
+#         private_key = wallet_key.at[i, 1]
+
+#         gas_price = web3.eth.gasPrice
+#         balance = web3.eth.getBalance(account_from)
+#         print(balance)
+#         gas_limit = 160000
+#         fee = gas_limit * gas_price
+#         value_to_withdraw = balance - fee
+#         print(value_to_withdraw)
+#         dict_transaction = {
+#             'chainId': chainId,
+#             'from': account_from,
+#             'gasPrice': gas_price,
+#             'nonce': web3.eth.getTransactionCount(account_from),
+#             'value': value_to_withdraw,
+#             'gas': gas_limit,
+#         }
+#         transaction = deposit_contract.functions.withdrawETH(
+#             value_to_withdraw - 50000000000000000, gas_limit).buildTransaction(dict_transaction)
+#         sign_transaction(transaction, network, private_key)
 
 
 def backSendETH():
@@ -303,10 +361,12 @@ def main():
     send_txn()
     depositETH()
     wrapETHandUnwrap()
-    # unwrapETH()
     BufficornBatle()
 
 
 def comeBAck():
     withdrawDeposit()
     backSendETH()
+
+
+withdrawDeposit()
