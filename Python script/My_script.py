@@ -286,57 +286,6 @@ def withdrawDeposit():
         sign_transaction(transaction, network, private_key)
 
 
-# def withdrawDeposit():
-#     wallets = get_wallet_edge()
-#     for i in range(len(wallets)):
-#         network = scroll_alpha
-#         web3 = Web3(network)
-#         account_from = wallet_key.at[i, 0]
-#         chainId = 534353
-#         contract_abi = [
-#             {
-#                 "inputs": [
-#                     {
-#                         "internalType": "uint256",
-#                         "name": "_amount",
-#                         "type": "uint256"
-#                     },
-#                     {
-#                         "internalType": "uint256",
-#                         "name": "_gasLimit",
-#                         "type": "uint256"
-#                     }
-#                 ],
-#                 "name": "withdrawETH",
-#                 "outputs": [],
-#                 "stateMutability": "nonpayable",
-#                 "type": "function"
-#             }
-#         ]
-#         contract = "0x6d79Aa2e4Fbf80CF8543Ad97e294861853fb0649"
-#         deposit_contract = web3.eth.contract(contract, abi=contract_abi)
-#         private_key = wallet_key.at[i, 1]
-
-#         gas_price = web3.eth.gasPrice
-#         balance = web3.eth.getBalance(account_from)
-#         print(balance)
-#         gas_limit = 160000
-#         fee = gas_limit * gas_price
-#         value_to_withdraw = balance - fee
-#         print(value_to_withdraw)
-#         dict_transaction = {
-#             'chainId': chainId,
-#             'from': account_from,
-#             'gasPrice': gas_price,
-#             'nonce': web3.eth.getTransactionCount(account_from),
-#             'value': value_to_withdraw,
-#             'gas': gas_limit,
-#         }
-#         transaction = deposit_contract.functions.withdrawETH(
-#             value_to_withdraw - 50000000000000000, gas_limit).buildTransaction(dict_transaction)
-#         sign_transaction(transaction, network, private_key)
-
-
 def backSendETH():
     wallets = get_wallet_edge()
     for i in range(len(wallets)):
@@ -344,7 +293,9 @@ def backSendETH():
         web3 = Web3(network)
         account_from = wallet_key.at[i, 0]
         chainId = 5
-        value = web3.eth.get_balance(wallet_key.at[i, 0]) - 0.001
+        value = web3.fromWei(web3.eth.get_balance(
+            wallet_key.at[i, 0]), 'wei') - 15000000000000000
+        print(value)
         data = ""
         if (check_balance(wallet_key.at[i, 0], network) == 0):
             logger.info(
@@ -369,4 +320,4 @@ def comeBAck():
     backSendETH()
 
 
-withdrawDeposit()
+backSendETH()
